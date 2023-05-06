@@ -1,0 +1,3 @@
+RAW_AUDIO_DIRECTORY_PATH = '/audio/raw'
+PROCESSED_AUDIO_DIRECTORY_PATH = '/audio/raw'
+PROCESSED_AUDIO_EXTENSIONS = ['mp3', 'mpeg', 'ogg', 'wav']

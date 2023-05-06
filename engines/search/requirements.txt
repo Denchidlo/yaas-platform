@@ -1,0 +1,7 @@
+numpy
+wave
+scipy
+opencv-python
+pydub
+fastapi
+uvicorn

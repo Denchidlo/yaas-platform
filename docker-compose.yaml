@@ -1,0 +1,63 @@
+version: "3"
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - app-db-data:/var/lib/postgresql/data/pgdata
+    env_file:
+      - .env
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    networks:
+      - db_subnet
+
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - '5050:5050'
+    volumes:
+      - pg-admin-data:/var/lib/pgadmin
+    depends_on:
+      - db
+    env_file:
+      - .env
+    networks:
+      - db_subnet
+
+  # matching:
+  #   build:
+  #     context: engines/search
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - '8081:8081'
+  #   depends_on:
+  #     - db
+
+  crawler:
+    build: 
+      context: engines/crawler
+      dockerfile: Dockerfile
+    volumes:
+      - /home/user/repo/diploma/storage/reference:/audio/raw
+    depends_on:
+      - db
+    env_file:
+      - .env
+    networks:
+      - db_subnet
+
+  audiohosting:
+    build:
+      context: audiohosting
+      dockerfile: Dockerfile
+    volumes:
+      - /home/user/repo/diploma/storage/reference:/audio/raw
+    ports:
+      - '8888:8888'
+    
+volumes:
+  app-db-data:
+  pg-admin-data:
+
+networks:
+  db_subnet:
