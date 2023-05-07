@@ -1,24 +1,16 @@
 import os
 import logging
 
+import pyyaap.codec.decode as audio_codec
+from pyyaap.utils import get_connection
 from pyyaap.app.core.db import PostgreSQLDatabase
 from pyyaap.app.workers import FingerpintCrawler
-import pyyaap.codec.decode as audio_codec
 from pyyaap.config.app import SUPPORTED_EXTENSIONS
 
 
 CRAWLER_CFG = {}
 TARGET_DIR = '/audio/raw'
 
-
-def get_connection():
-    return {
-        'database': os.getenv('POSTGRES_DB'),
-        'user': os.getenv('POSTGRES_USER'),
-        'password': os.getenv('POSTGRES_PASSWORD'),
-        'host': os.getenv('POSTGRES_HOST'),
-        'port': os.getenv('POSTGRES_PORT'),
-    }
 
 def run_crawling_session():
     sql_connection = get_connection()
@@ -29,7 +21,6 @@ def run_crawling_session():
     n_audio = 0
 
     try:
-        db.empty()
         db.delete_unfingerprinted_songs()
         n_audio = db.get_num_songs()
     except:

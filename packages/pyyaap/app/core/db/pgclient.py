@@ -65,11 +65,11 @@ class PostgreSQLDatabase(CommonDatabase):
     SELECT = f"""
         SELECT "{FIELD_SONG_ID}", "{FIELD_OFFSET}"
         FROM "{FINGERPRINTS_TABLENAME}"
-        WHERE "{FIELD_HASH}" = decode(%s, 'hex');
+        WHERE "{FIELD_HASH}" = %s;
     """
 
     SELECT_MULTIPLE = f"""
-        SELECT upper(encode("{FIELD_HASH}", 'hex')), "{FIELD_SONG_ID}", "{FIELD_OFFSET}"
+        SELECT "{FIELD_HASH}", "{FIELD_SONG_ID}", "{FIELD_OFFSET}"
         FROM "{FINGERPRINTS_TABLENAME}"
         WHERE "{FIELD_HASH}" IN (%s);
     """
@@ -126,7 +126,7 @@ class PostgreSQLDatabase(CommonDatabase):
     """
 
     # IN
-    IN_MATCH = f"decode(%s, 'hex')"
+    IN_MATCH = "%s"
 
     def __init__(self, **options):
         super().__init__()

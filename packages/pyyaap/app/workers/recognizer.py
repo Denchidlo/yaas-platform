@@ -6,30 +6,37 @@ from itertools import groupby
 from time import time
 from typing import Dict, List, Tuple
 
-from pyyaap.matching.signal.fingerprint import fingerprint
 
+import pyyaap.codec.decode as decoder
+from pyyaap.matching.signal.fingerprint import fingerprint
 from pyyaap.app.core.db import BaseDatabase
 from pyyaap.config.app import (
     FIELD_FILE_SHA1, FIELD_TOTAL_HASHES, 
     FINGERPRINTED_CONFIDENCE,FINGERPRINTED_HASHES, 
     HASHES_MATCHED, INPUT_CONFIDENCE, INPUT_HASHES, 
-    OFFSET, OFFSET_SECS, SONG_ID, SONG_NAME, TOPN
+    OFFSET, OFFSET_SECS, SONG_ID, SONG_NAME, TOPN, TOTAL_TIME, 
+    FINGERPRINT_TIME, QUERY_TIME, ALIGN_TIME, RESULTS
+)
+from pyyaap.config.fingerprint import (
+    FP_SPEC_FREQ, FP_SPEC_OVERLAP, FP_SPEC_WIN_SIZE
 )
 
 
 class AudioRecognizer:    
     def __init__(self, config: Dict, db: BaseDatabase):
-        self.config= config['fingerprint']
+        self.config= config
         self.db = db
 
-    def generate_fingerprints(self, samples: np.ndarray) -> Tuple[List[Tuple[str, int]], float]:
+        self.limit = None
+
+    def generate_fingerprints(self, samples: np.ndarray, Fs=FP_SPEC_FREQ) -> Tuple[List[Tuple[str, int]], float]:
         f"""
             Generate the fingerprints for the given sample data (channel).
             :param samples: numpy array represents the channel info of the given audio file.
             :return: a list of tuples for hash and its corresponding offset, together with the generation time.
         """
         t = time()
-        hashes = fingerprint(samples, **self.config)
+        hashes = fingerprint(samples, **{**self.config, 'freq':Fs})
         fingerprint_time = time() - t
         return hashes, fingerprint_time
 
@@ -72,33 +79,33 @@ class AudioRecognizer:
 
             song_name = song.get(SONG_NAME, None)
             song_hashes = song.get(FIELD_TOTAL_HASHES, None)
-            nseconds = round(float(offset) / DEFAULT_FS * DEFAULT_WINDOW_SIZE * DEFAULT_OVERLAP_RATIO, 5)
+            nseconds = round(float(offset) / FP_SPEC_FREQ * FP_SPEC_WIN_SIZE * FP_SPEC_OVERLAP, 5)
             hashes_matched = dedup_hashes[song_id]
 
             song = {
-                SONG_ID: song_id,
-                SONG_NAME: song_name.encode("utf8"),
-                INPUT_HASHES: queried_hashes,
-                FINGERPRINTED_HASHES: song_hashes,
-                HASHES_MATCHED: hashes_matched,
+                SONG_ID: str(song_id),
+                SONG_NAME: str(song_name),
+                # INPUT_HASHES: queried_hashes,
+                # FINGERPRINTED_HASHES: song_hashes,
+                # HASHES_MATCHED: hashes_matched,
                 # Percentage regarding hashes matched vs hashes from the input.
                 INPUT_CONFIDENCE: round(hashes_matched / queried_hashes, 2),
                 # Percentage regarding hashes matched vs hashes fingerprinted in the db.
                 FINGERPRINTED_CONFIDENCE: round(hashes_matched / song_hashes, 2),
-                OFFSET: offset,
-                OFFSET_SECS: nseconds,
-                FIELD_FILE_SHA1: song.get(FIELD_FILE_SHA1, None).encode("utf8")
+                # OFFSET: offset,
+                # OFFSET_SECS: nseconds,
+                # FIELD_FILE_SHA1: song.get(FIELD_FILE_SHA1, None).encode("utf8")
             }
 
             songs_result.append(song)
 
         return songs_result
 
-    def _recognize(self, *data) -> Tuple[List[Dict[str, any]], int, int, int]:
+    def _recognize(self, *data, freq=FP_SPEC_FREQ) -> Tuple[List[Dict[str, any]], int, int, int]:
         fingerprint_times = []
         hashes = set()  # to remove possible duplicated fingerprints we built a set.
         for channel in data:
-            fingerprints, fingerprint_time = self.generate_fingerprints(channel, Fs=self.Fs)
+            fingerprints, fingerprint_time = self.generate_fingerprints(channel, Fs=freq)
             fingerprint_times.append(fingerprint_time)
             hashes |= set(fingerprints)
 
@@ -111,13 +118,16 @@ class AudioRecognizer:
         return final_results, np.sum(fingerprint_times), query_time, align_time
 
     def recognize(self, type, **payload) -> Dict[str, any]:
+        framerate = FP_SPEC_FREQ
         if type == 'file':
-            channels, self.Fs, _ = decoder.read(payload, self.dejavu.limit)
+            record = decoder.read_file(payload["payload"], self.limit, ext=payload['ext'])
+            channels = record.channels
+            framerate = record.framerate
         else:
-            channels = payload['channels']
+            channels = payload['channels']        
 
         t = time()
-        matches, fingerprint_time, query_time, align_time = self._recognize(*channels)
+        matches, fingerprint_time, query_time, align_time = self._recognize(*channels, freq=framerate)
         t = time() - t
 
         results = {

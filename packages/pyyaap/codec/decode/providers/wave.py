@@ -23,6 +23,8 @@ class WAVCodec(BaseCodec):
         f_width = params.sampwidth
         n_samples, r = divmod(len(data), n_channels * f_width)
 
+        print(params)
+
         assert r == 0, "Wav file corrupted"
 
         if f_width != 3:

@@ -9,10 +9,6 @@ RUN apt -y update \
 
 RUN apt-get -y update && apt-get -y install cron
 
-# RUN apt-get install -y libavcodec-dev libavformat-dev \
-#     libswscale-dev libv4l-dev  \
-#     && apt-get -y install libxvidcore-dev libx264-dev
-
 ## set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1

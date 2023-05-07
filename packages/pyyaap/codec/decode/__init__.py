@@ -12,13 +12,23 @@ REGISTERED_CODECS = [
     WAVCodec, PyDubCodec 
 ]
 
-def read_file(filename: str, limit=1000) -> Record:
-    ext = filename.split('.')[-1]
+def read_file(file: str, limit=1000, ext=None) -> Record:
+    if isinstance(file, str):
+        ext = file.split('.')[-1]
+        f = open(file, 'rb')
+    else:
+        f = file
 
-    decoder = None
+    record = None
     for codec in REGISTERED_CODECS:
         if ext in codec.SUPPORTED_FORMATS:
-            record = codec.read(filename, ext=ext, limit=limit)
+            record = codec.read(f, ext=ext, limit=limit)
+
+    if isinstance(file, str):
+        f.close()
+
+    if record is None:
+        raise ValueError("Unsupported audio format encountered")
 
     return record
 

@@ -1,7 +1,10 @@
 numpy
 wave
 scipy
-opencv-python
+opencv-python==4.6.0.66
 pydub
-fastapi
-uvicorn
+psycopg2-binary
+aiofile
+aiohttp
+aiohttp-cors
+aiohttp-swagger3

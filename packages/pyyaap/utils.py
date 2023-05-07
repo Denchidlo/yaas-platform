@@ -2,6 +2,15 @@ import os
 import aiofile
 
 
+def get_connection():
+    return {
+        'database': os.getenv('POSTGRES_DB'),
+        'user': os.getenv('POSTGRES_USER'),
+        'password': os.getenv('POSTGRES_PASSWORD'),
+        'host': os.getenv('POSTGRES_HOST'),
+        'port': os.getenv('POSTGRES_PORT'),
+    }
+
 async def get_chunk(filename, l_ptr=None, r_ptr=None):
     file_size = os.stat(filename).st_size
     default_chunk_size = 8192
@@ -18,3 +27,4 @@ async def get_chunk(filename, l_ptr=None, r_ptr=None):
         f.seek(start)
         chunk = await f.read(length)
     return chunk, start, length, file_size
+ 

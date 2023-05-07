@@ -24,14 +24,18 @@ services:
     networks:
       - db_subnet
 
-  # matching:
-  #   build:
-  #     context: engines/search
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - '8081:8081'
-  #   depends_on:
-  #     - db
+  matching:
+    build:
+      context: engines/search
+      dockerfile: Dockerfile
+    ports:
+      - '8090:8888'
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - db_subnet
 
   crawler:
     build: 
