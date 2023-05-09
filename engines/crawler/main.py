@@ -20,7 +20,7 @@ def run_crawling_session():
 
     n_audio = 0
 
-    try:
+    try: 
         db.delete_unfingerprinted_songs()
         n_audio = db.get_num_songs()
     except:
