@@ -99,6 +99,9 @@ async def recognize(request: web.Request) -> web.Response:
     assert field.name == "payload", 'Second form field must be "payload" field containing file bytes'
     filename = field.filename
 
+    print(f"Name {name}")
+    print(f"Filename {filename}")
+
     size = 0
     with tempfile.NamedTemporaryFile() as tmp:
         while True or size < 2:

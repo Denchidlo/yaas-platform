@@ -6,6 +6,8 @@ services:
       - app-db-data:/var/lib/postgresql/data/pgdata
     env_file:
       - .env
+    ports:
+      - '5432:5432'
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
     networks:
@@ -34,32 +36,34 @@ services:
       - .env
     depends_on:
       - db
+    networks:
+      - db_subnet
 
-  # matching:
-  #   build:
-  #     context: engines/search
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - '8090:8888'
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     - db
-  #   networks:
-  #     - db_subnet
+  matching:
+    build:
+      context: engines/search
+      dockerfile: Dockerfile
+    ports:
+      - '8090:8888'
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - db_subnet
 
-  # crawler:
-  #   build: 
-  #     context: engines/crawler
-  #     dockerfile: Dockerfile
-  #   volumes:
-  #     - /home/user/repo/diploma/storage/reference:/audio/raw
-  #   depends_on:
-  #     - db
-  #   env_file:
-  #     - .env
-  #   networks:
-  #     - db_subnet
+  crawler:
+    build: 
+      context: engines/crawler
+      dockerfile: Dockerfile
+    volumes:
+      - /home/user/repo/diploma/storage/reference:/audio/raw
+    depends_on:
+      - db
+    env_file:
+      - .env
+    networks:
+      - db_subnet
 
   audiohosting:
     build:

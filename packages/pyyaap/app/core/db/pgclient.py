@@ -5,36 +5,36 @@ from psycopg2.extras import DictCursor
 
 from pyyaap.app.core.db.base import CommonDatabase
 from pyyaap.config.app import (FIELD_FILE_SHA1, FIELD_FINGERPRINTED,
-                                    FIELD_HASH, FIELD_OFFSET, FIELD_SONG_ID,
-                                    FIELD_SONGNAME, FIELD_TOTAL_HASHES,
-                                    FINGERPRINTS_TABLENAME, SONGS_TABLENAME)
+                                    FIELD_HASH, FIELD_OFFSET, FIELD_AUDIO_ID,
+                                    FIELD_AUDIONAME, FIELD_TOTAL_HASHES,
+                                    FINGERPRINTS_TABLENAME, AUDIOS_TABLENAME)
 
 
 class PostgreSQLDatabase(CommonDatabase):
     type = "postgres"
 
     # CREATES
-    CREATE_SONGS_TABLE = f"""
-        CREATE TABLE IF NOT EXISTS "{SONGS_TABLENAME}" (
-            "{FIELD_SONG_ID}" SERIAL
-        ,   "{FIELD_SONGNAME}" VARCHAR(250) NOT NULL
+    CREATE_AUDIOS_TABLE = f"""
+        CREATE TABLE IF NOT EXISTS "{AUDIOS_TABLENAME}" (
+            "{FIELD_AUDIO_ID}" SERIAL
+        ,   "{FIELD_AUDIONAME}" VARCHAR(250) NOT NULL
         ,   "{FIELD_FINGERPRINTED}" SMALLINT DEFAULT 0
         ,   "{FIELD_FILE_SHA1}" BYTEA
         ,   "{FIELD_TOTAL_HASHES}" INT NOT NULL DEFAULT 0
-        ,   "date_created" TIMESTAMP NOT NULL DEFAULT now()
-        ,   "date_modified" TIMESTAMP NOT NULL DEFAULT now()
-        ,   CONSTRAINT "pk_{SONGS_TABLENAME}_{FIELD_SONG_ID}" PRIMARY KEY ("{FIELD_SONG_ID}")
-        ,   CONSTRAINT "uq_{SONGS_TABLENAME}_{FIELD_SONG_ID}" UNIQUE ("{FIELD_SONG_ID}")
+        ,   "dt_created" TIMESTAMP NOT NULL DEFAULT now()
+        ,   "dt_modified" TIMESTAMP NOT NULL DEFAULT now()
+        ,   CONSTRAINT "pk_{AUDIOS_TABLENAME}_{FIELD_AUDIO_ID}" PRIMARY KEY ("{FIELD_AUDIO_ID}")
+        ,   CONSTRAINT "uq_{AUDIOS_TABLENAME}_{FIELD_AUDIO_ID}" UNIQUE ("{FIELD_AUDIO_ID}")
         );
     """
 
     CREATE_FINGERPRINTS_TABLE = f"""
         CREATE TABLE IF NOT EXISTS "{FINGERPRINTS_TABLENAME}" (
             "{FIELD_HASH}" BIGINT NOT NULL
-        ,   "{FIELD_SONG_ID}" INT NOT NULL
+        ,   "audio_{FIELD_AUDIO_ID}" INT NOT NULL
         ,   "{FIELD_OFFSET}" INT NOT NULL
-        ,   CONSTRAINT "fk_{FINGERPRINTS_TABLENAME}_{FIELD_SONG_ID}" FOREIGN KEY ("{FIELD_SONG_ID}")
-                REFERENCES "{SONGS_TABLENAME}"("{FIELD_SONG_ID}") ON DELETE CASCADE
+        ,   CONSTRAINT "fk_{FINGERPRINTS_TABLENAME}_audio_{FIELD_AUDIO_ID}" FOREIGN KEY ("audio_{FIELD_AUDIO_ID}")
+                REFERENCES "{AUDIOS_TABLENAME}"("{FIELD_AUDIO_ID}") ON DELETE CASCADE
         );
         CREATE INDEX IF NOT EXISTS "ix_{FINGERPRINTS_TABLENAME}_{FIELD_HASH}" ON "{FINGERPRINTS_TABLENAME}"
         USING hash ("{FIELD_HASH}");
@@ -48,80 +48,80 @@ class PostgreSQLDatabase(CommonDatabase):
     # INSERTS (IGNORES DUPLICATES)
     INSERT_FINGERPRINT = f"""
         INSERT INTO "{FINGERPRINTS_TABLENAME}" (
-                "{FIELD_SONG_ID}"
+                "audio_{FIELD_AUDIO_ID}"
             ,   "{FIELD_HASH}"
             ,   "{FIELD_OFFSET}")
         VALUES (%s, %s, %s) ON CONFLICT DO NOTHING;
     """
 
-    INSERT_SONG = f"""
-        INSERT INTO "{SONGS_TABLENAME}" ("{FIELD_SONGNAME}", "{FIELD_FILE_SHA1}","{FIELD_TOTAL_HASHES}")
+    INSERT_AUDIO = f"""
+        INSERT INTO "{AUDIOS_TABLENAME}" ("{FIELD_AUDIONAME}", "{FIELD_FILE_SHA1}","{FIELD_TOTAL_HASHES}")
         VALUES (%s, decode(%s, 'hex'), %s)
-        RETURNING "{FIELD_SONG_ID}";
+        RETURNING "{FIELD_AUDIO_ID}";
     """
 
     # SELECTS
     SELECT = f"""
-        SELECT "{FIELD_SONG_ID}", "{FIELD_OFFSET}"
+        SELECT "audio_{FIELD_AUDIO_ID}", "{FIELD_OFFSET}"
         FROM "{FINGERPRINTS_TABLENAME}"
         WHERE "{FIELD_HASH}" = %s;
     """
 
     SELECT_MULTIPLE = f"""
-        SELECT "{FIELD_HASH}", "{FIELD_SONG_ID}", "{FIELD_OFFSET}"
+        SELECT "{FIELD_HASH}", "audio_{FIELD_AUDIO_ID}", "{FIELD_OFFSET}"
         FROM "{FINGERPRINTS_TABLENAME}"
         WHERE "{FIELD_HASH}" IN (%s);
     """
 
-    SELECT_ALL = f'SELECT "{FIELD_SONG_ID}", "{FIELD_OFFSET}" FROM "{FINGERPRINTS_TABLENAME}";'
+    SELECT_ALL = f'SELECT "audio_{FIELD_AUDIO_ID}", "{FIELD_OFFSET}" FROM "{FINGERPRINTS_TABLENAME}";'
 
-    SELECT_SONG = f"""
+    SELECT_AUDIO = f"""
         SELECT
-            "{FIELD_SONGNAME}"
+            "{FIELD_AUDIONAME}"
         ,   upper(encode("{FIELD_FILE_SHA1}", 'hex')) AS "{FIELD_FILE_SHA1}"
         ,   "{FIELD_TOTAL_HASHES}"
-        FROM "{SONGS_TABLENAME}"
-        WHERE "{FIELD_SONG_ID}" = %s;
+        FROM "{AUDIOS_TABLENAME}"
+        WHERE "{FIELD_AUDIO_ID}" = %s;
     """
 
     SELECT_NUM_FINGERPRINTS = f'SELECT COUNT(*) AS n FROM "{FINGERPRINTS_TABLENAME}";'
 
-    SELECT_UNIQUE_SONG_IDS = f"""
-        SELECT COUNT("{FIELD_SONG_ID}") AS n
-        FROM "{SONGS_TABLENAME}"
+    SELECT_UNIQUE_AUDIO_IDS = f"""
+        SELECT COUNT("{FIELD_AUDIO_ID}") AS n
+        FROM "{AUDIOS_TABLENAME}"
         WHERE "{FIELD_FINGERPRINTED}" = 1;
     """
 
-    SELECT_SONGS = f"""
+    SELECT_AUDIOS = f"""
         SELECT
-            "{FIELD_SONG_ID}"
-        ,   "{FIELD_SONGNAME}"
+            "{FIELD_AUDIO_ID}"
+        ,   "{FIELD_AUDIONAME}"
         ,   upper(encode("{FIELD_FILE_SHA1}", 'hex')) AS "{FIELD_FILE_SHA1}"
         ,   "{FIELD_TOTAL_HASHES}"
-        ,   "date_created"
-        FROM "{SONGS_TABLENAME}"
+        ,   "dt_created"
+        FROM "{AUDIOS_TABLENAME}"
         WHERE "{FIELD_FINGERPRINTED}" = 1;
     """
 
     # DROPS
     DROP_FINGERPRINTS = F'DROP TABLE IF EXISTS "{FINGERPRINTS_TABLENAME}";'
-    DROP_SONGS = F'DROP TABLE IF EXISTS "{SONGS_TABLENAME}";'
+    DROP_AUDIOS = F'DROP TABLE IF EXISTS "{AUDIOS_TABLENAME}";'
 
     # UPDATE
-    UPDATE_SONG_FINGERPRINTED = f"""
-        UPDATE "{SONGS_TABLENAME}" SET
+    UPDATE_AUDIO_FINGERPRINTED = f"""
+        UPDATE "{AUDIOS_TABLENAME}" SET
             "{FIELD_FINGERPRINTED}" = 1
-        ,   "date_modified" = now()
-        WHERE "{FIELD_SONG_ID}" = %s;
+        ,   "dt_modified" = now()
+        WHERE "{FIELD_AUDIO_ID}" = %s;
     """
 
     # DELETES
     DELETE_UNFINGERPRINTED = f"""
-        DELETE FROM "{SONGS_TABLENAME}" WHERE "{FIELD_FINGERPRINTED}" = 0;
+        DELETE FROM "{AUDIOS_TABLENAME}" WHERE "{FIELD_FINGERPRINTED}" = 0;
     """
 
-    DELETE_SONGS = f"""
-        DELETE FROM "{SONGS_TABLENAME}" WHERE "{FIELD_SONG_ID}" IN (%s);
+    DELETE_AUDIOS = f"""
+        DELETE FROM "{AUDIOS_TABLENAME}" WHERE "{FIELD_AUDIO_ID}" IN (%s);
     """
 
     # IN
@@ -137,17 +137,17 @@ class PostgreSQLDatabase(CommonDatabase):
         # the previous process.
         Cursor.clear_cache()
 
-    def insert_song(self, song_name: str, file_hash: str, total_hashes: int) -> int:
+    def insert_audio(self, audio_name: str, file_hash: str, total_hashes: int) -> int:
         """
-        Inserts a song name into the database, returns the new
-        identifier of the song.
-        :param song_name: The name of the song.
+        Inserts a audio name into the database, returns the new
+        identifier of the audio.
+        :param audio_name: The name of the audio.
         :param file_hash: Hash from the fingerprinted file.
         :param total_hashes: amount of hashes to be inserted on fingerprint table.
         :return: the inserted id.
         """
         with self.cursor() as cur:
-            cur.execute(self.INSERT_SONG, (song_name, file_hash, total_hashes))
+            cur.execute(self.INSERT_AUDIO, (audio_name, file_hash, total_hashes))
             return cur.fetchone()[0]
 
     def __getstate__(self):

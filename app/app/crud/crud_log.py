@@ -8,10 +8,9 @@ from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models import Log, Event
 from app.schemas.log import LogCreate, LogUpdate
-from app.enums import VideoStatus
 
 
-class CRUDLog(CRUDBase[Log]):
+class CRUDLog(CRUDBase[Log, LogCreate, LogUpdate]):
     async def get(self, db: AsyncSession, id: Any) -> Log:
         result = await db.execute(
             select(self.model)
@@ -45,7 +44,7 @@ class CRUDLog(CRUDBase[Log]):
         result = await db.execute(
             select(Log)
             .where(Log.event_id == rec_event_id)
-            .order_by(Log.dt_modified)
+            .order_by(Log.event_dt)
             .offset(skip)
             .limit(limit)
         )

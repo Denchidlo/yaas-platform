@@ -25,6 +25,6 @@ class BaseCodec:
         return Record(
             channels=channels, 
             framerate=framerate, 
-            name=f"unk-song__{sha_signature}" if not isinstance(file, str) else file, 
+            name=f"unk-audio__{sha_signature}" if not isinstance(file, str) else file, 
             hash=sha_signature
         )

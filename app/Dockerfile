@@ -15,4 +15,5 @@ RUN bash -c "if [ $INSTALL_DEV == 'true' ] ; then poetry install --no-root ; els
 
 RUN pip3 install --force-reinstall httpcore==0.15
 
+COPY . /app/
 ENV PYTHONPATH=/app

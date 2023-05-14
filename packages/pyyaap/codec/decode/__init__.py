@@ -52,7 +52,7 @@ def find_files(path: str, extensions: List[str]) -> List[Tuple[str, str]]:
 
 def get_audio_name_from_path(file_path: str) -> str:
     """
-    Extracts song name from a file path.
+    Extracts audio name from a file path.
     :param file_path: path to an audio file.
     :return: file name
     """

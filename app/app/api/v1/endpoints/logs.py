@@ -32,7 +32,7 @@ async def read_recognition_logs(
     """
     Retrieve audios.
     """
-    return await crud.audio.get_multi_by_type(db, skip=skip, limit=limit, type="RecognitionRequest")
+    return await crud.log.get_multi_by_type(db, skip=skip, limit=limit, type="RecognitionRequest")
 
 
 @router.get("/hosting", response_model=List[schemas.Log])

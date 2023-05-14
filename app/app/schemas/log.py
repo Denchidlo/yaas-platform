@@ -11,7 +11,7 @@ class LogBase(BaseModel):
     log_payload: str = None
 
 
-class LogInDBBase(UserBase):
+class LogInDBBase(LogBase):
     id: Optional[int] = None
 
     class Config:
@@ -19,3 +19,11 @@ class LogInDBBase(UserBase):
 
 class Log(LogInDBBase):
     pass
+
+# Properties to receive via API on creation
+class LogCreate(LogBase):
+    log_payload: str
+
+# Properties to receive via API on update
+class LogUpdate(LogBase):
+    log_payload: str

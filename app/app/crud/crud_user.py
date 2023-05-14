@@ -6,9 +6,8 @@ from sqlalchemy import select, and_
 
 from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
-from app.models import User, Like
+from app.models import User
 from app.schemas.user import UserCreate, UserUpdate
-from app.enums import VideoStatus
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -32,7 +31,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db_obj = User(
             email=obj_in.email,
             hashed_password=get_password_hash(obj_in.password),
-            username=obj_in.connected_account_id if obj_in.connected_account_id else obj_in.email.split('@')[0],
+            connected_account_id=obj_in.connected_account_id if obj_in.connected_account_id else obj_in.email.split('@')[0],
         )
         db.add(db_obj)
         await db.commit()

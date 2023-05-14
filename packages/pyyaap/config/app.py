@@ -1,6 +1,6 @@
-# DEJAVU JSON RESPONSE
-SONG_ID = "song_id"
-SONG_NAME = 'song_name'
+# YAAS JSON RESPONSE
+AUDIO_ID = "audio_id"
+AUDIO_NAME = 'filename'
 RESULTS = 'results'
 
 HASHES_MATCHED = 'hashes_matched_in_input'
@@ -22,18 +22,18 @@ ALIGN_TIME = 'align_time'
 OFFSET = 'offset'
 OFFSET_SECS = 'offset_seconds'
 
-# TABLE SONGS
-SONGS_TABLENAME = "songs"
+# TABLE AUDIOS
+AUDIOS_TABLENAME = "audio"
 
-# SONGS FIELDS
-FIELD_SONG_ID = 'song_id'
-FIELD_SONGNAME = 'song_name'
+# AUDIOS FIELDS
+FIELD_AUDIO_ID = 'id'
+FIELD_AUDIONAME = 'filename'
 FIELD_FINGERPRINTED = "fingerprinted"
 FIELD_FILE_SHA1 = 'file_sha1'
 FIELD_TOTAL_HASHES = 'total_hashes'
 
 # TABLE FINGERPRINTS
-FINGERPRINTS_TABLENAME = "fingerprints"
+FINGERPRINTS_TABLENAME = "fingerprint"
 
 # FINGERPRINTS FIELDS
 FIELD_HASH = 'hash'
@@ -52,4 +52,4 @@ FINGERPRINT_REDUCTION = 20
 # Number of results being returned for file recognition
 TOPN = 2
 
-SUPPORTED_EXTENSIONS = [ 'mp3', 'mpeg', 'wav', 'ogg' ]
+SUPPORTED_EXTENSIONS = [ 'mp3', 'mpeg', 'wav', 'ogg', "m4a" ]

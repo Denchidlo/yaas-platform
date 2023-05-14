@@ -33,18 +33,18 @@ class BaseDatabase:
         pass
 
     @abc.abstractmethod
-    def delete_unfingerprinted_songs(self) -> None:
+    def delete_unfingerprinted_audios(self) -> None:
         """
-        Called to remove any song entries that do not have any fingerprints
+        Called to remove any audio entries that do not have any fingerprints
         associated with them.
         """
         pass
 
     @abc.abstractmethod
-    def get_num_songs(self) -> int:
+    def get_num_audios(self) -> int:
         """
-        Returns the song's count stored.
-        :return: the amount of songs in the database.
+        Returns the audio's count stored.
+        :return: the amount of audios in the database.
         """
         pass
 
@@ -57,46 +57,46 @@ class BaseDatabase:
         pass
 
     @abc.abstractmethod
-    def set_song_fingerprinted(self, song_id: int):
+    def set_audio_fingerprinted(self, audio_id: int):
         """
-        Sets a specific song as having all fingerprints in the database.
-        :param song_id: song identifier.
-        """
-        pass
-
-    @abc.abstractmethod
-    def get_songs(self) -> List[Dict[str, str]]:
-        """
-        Returns all fully fingerprinted songs in the database
-        :return: a dictionary with the songs info.
+        Sets a specific audio as having all fingerprints in the database.
+        :param audio_id: audio identifier.
         """
         pass
 
     @abc.abstractmethod
-    def get_song_by_id(self, song_id: int) -> Dict[str, str]:
+    def get_audios(self) -> List[Dict[str, str]]:
         """
-        Brings the song info from the database.
-        :param song_id: song identifier.
-        :return: a song by its identifier. Result must be a Dictionary.
+        Returns all fully fingerprinted audios in the database
+        :return: a dictionary with the audios info.
         """
         pass
 
     @abc.abstractmethod
-    def insert(self, fingerprint: str, song_id: int, offset: int):
+    def get_audio_by_id(self, audio_id: int) -> Dict[str, str]:
+        """
+        Brings the audio info from the database.
+        :param audio_id: audio identifier.
+        :return: a audio by its identifier. Result must be a Dictionary.
+        """
+        pass
+
+    @abc.abstractmethod
+    def insert(self, fingerprint: str, audio_id: int, offset: int):
         """
         Inserts a single fingerprint into the database.
         :param fingerprint: Part of a sha1 hash, in hexadecimal format
-        :param song_id: Song identifier this fingerprint is off
+        :param audio_id: Song identifier this fingerprint is off
         :param offset: The offset this fingerprint is from.
         """
         pass
 
     @abc.abstractmethod
-    def insert_song(self, song_name: str, file_hash: str, total_hashes: int) -> int:
+    def insert_audio(self, audio_name: str, file_hash: str, total_hashes: int) -> int:
         """
-        Inserts a song name into the database, returns the new
-        identifier of the song.
-        :param song_name: The name of the song.
+        Inserts a audio name into the database, returns the new
+        identifier of the audio.
+        :param audio_name: The name of the audio.
         :param file_hash: Hash from the fingerprinted file.
         :param total_hashes: amount of hashes to be inserted on fingerprint table.
         :return: the inserted id.
@@ -122,10 +122,10 @@ class BaseDatabase:
         pass
 
     @abc.abstractmethod
-    def insert_hashes(self, song_id: int, hashes: List[Tuple[str, int]], batch_size: int = 1000) -> None:
+    def insert_hashes(self, audio_id: int, hashes: List[Tuple[str, int]], batch_size: int = 1000) -> None:
         """
         Insert a multitude of fingerprints.
-        :param song_id: Song identifier the fingerprints belong to
+        :param audio_id: Song identifier the fingerprints belong to
         :param hashes: A sequence of tuples in the format (hash, offset)
             - hash: Part of a sha1 hash, in hexadecimal format
             - offset: Offset this hash was created from/at.
@@ -143,17 +143,17 @@ class BaseDatabase:
         :param batch_size: number of query's batches.
         :return: a list of (sid, offset_difference) tuples and a
         dictionary with the amount of hashes matched (not considering
-        duplicated hashes) in each song.
-            - song id: Song identifier
+        duplicated hashes) in each audio.
+            - audio id: Song identifier
             - offset_difference: (database_offset - sampled_offset)
         """
         pass
 
     @abc.abstractmethod
-    def delete_songs_by_id(self, song_ids: List[int], batch_size: int = 1000) -> None:
+    def delete_audios_by_id(self, audio_ids: List[int], batch_size: int = 1000) -> None:
         """
-        Given a list of song ids it deletes all songs specified and their corresponding fingerprints.
-        :param song_ids: song ids to be deleted from the database.
+        Given a list of audio ids it deletes all audios specified and their corresponding fingerprints.
+        :param audio_ids: audio ids to be deleted from the database.
         :param batch_size: number of query's batches.
         """
         pass
@@ -201,7 +201,7 @@ class CommonDatabase(BaseDatabase, metaclass=abc.ABCMeta):
         Called on creation or shortly afterwards.
         """
         with self.cursor() as cur:
-            cur.execute(self.CREATE_SONGS_TABLE)
+            cur.execute(self.CREATE_AUDIOS_TABLE)
             cur.execute(self.CREATE_FINGERPRINTS_TABLE)
             cur.execute(self.DELETE_UNFINGERPRINTED)
 
@@ -211,25 +211,25 @@ class CommonDatabase(BaseDatabase, metaclass=abc.ABCMeta):
         """
         with self.cursor() as cur:
             cur.execute(self.DROP_FINGERPRINTS)
-            cur.execute(self.DROP_SONGS)
+            cur.execute(self.DROP_AUDIOS)
 
         self.setup()
 
-    def delete_unfingerprinted_songs(self) -> None:
+    def delete_unfingerprinted_audios(self) -> None:
         """
-        Called to remove any song entries that do not have any fingerprints
+        Called to remove any audio entries that do not have any fingerprints
         associated with them.
         """
         with self.cursor() as cur:
             cur.execute(self.DELETE_UNFINGERPRINTED)
 
-    def get_num_songs(self) -> int:
+    def get_num_audios(self) -> int:
         """
-        Returns the song's count stored.
-        :return: the amount of songs in the database.
+        Returns the audio's count stored.
+        :return: the amount of audios in the database.
         """
-        with self.cursor(buffered=True) as cur:
-            cur.execute(self.SELECT_UNIQUE_SONG_IDS)
+        with self.cursor() as cur:
+            cur.execute(self.SELECT_UNIQUE_AUDIO_IDS)
             count = cur.fetchone()[0] if cur.rowcount != 0 else 0
 
         return count
@@ -245,49 +245,49 @@ class CommonDatabase(BaseDatabase, metaclass=abc.ABCMeta):
 
         return count
 
-    def set_song_fingerprinted(self, song_id):
+    def set_audio_fingerprinted(self, audio_id):
         """
-        Sets a specific song as having all fingerprints in the database.
-        :param song_id: song identifier.
+        Sets a specific audio as having all fingerprints in the database.
+        :param audio_id: audio identifier.
         """
         with self.cursor() as cur:
-            cur.execute(self.UPDATE_SONG_FINGERPRINTED, (song_id,))
+            cur.execute(self.UPDATE_AUDIO_FINGERPRINTED, (audio_id,))
 
-    def get_songs(self) -> List[Dict[str, str]]:
+    def get_audios(self) -> List[Dict[str, str]]:
         """
-        Returns all fully fingerprinted songs in the database
-        :return: a dictionary with the songs info.
+        Returns all fully fingerprinted audios in the database
+        :return: a dictionary with the audios info.
         """
         with self.cursor(dictionary=True) as cur:
-            cur.execute(self.SELECT_SONGS)
+            cur.execute(self.SELECT_AUDIOS)
             return list(cur)
 
-    def get_song_by_id(self, song_id: int) -> Dict[str, str]:
+    def get_audio_by_id(self, audio_id: int) -> Dict[str, str]:
         """
-        Brings the song info from the database.
-        :param song_id: song identifier.
-        :return: a song by its identifier. Result must be a Dictionary.
+        Brings the audio info from the database.
+        :param audio_id: audio identifier.
+        :return: a audio by its identifier. Result must be a Dictionary.
         """
         with self.cursor(dictionary=True) as cur:
-            cur.execute(self.SELECT_SONG, (song_id,))
+            cur.execute(self.SELECT_AUDIO, (audio_id,))
             return cur.fetchone()
 
-    def insert(self, fingerprint: str, song_id: int, offset: int):
+    def insert(self, fingerprint: str, audio_id: int, offset: int):
         """
         Inserts a single fingerprint into the database.
         :param fingerprint: Part of a sha1 hash, in hexadecimal format
-        :param song_id: Song identifier this fingerprint is off
+        :param audio_id: Song identifier this fingerprint is off
         :param offset: The offset this fingerprint is from.
         """
         with self.cursor() as cur:
-            cur.execute(self.INSERT_FINGERPRINT, (fingerprint, song_id, offset))
+            cur.execute(self.INSERT_FINGERPRINT, (fingerprint, audio_id, offset))
 
     @abc.abstractmethod
-    def insert_song(self, song_name: str, file_hash: str, total_hashes: int) -> int:
+    def insert_audio(self, audio_name: str, file_hash: str, total_hashes: int) -> int:
         """
-        Inserts a song name into the database, returns the new
-        identifier of the song.
-        :param song_name: The name of the song.
+        Inserts a audio name into the database, returns the new
+        identifier of the audio.
+        :param audio_name: The name of the audio.
         :param file_hash: Hash from the fingerprinted file.
         :param total_hashes: amount of hashes to be inserted on fingerprint table.
         :return: the inserted id.
@@ -315,16 +315,16 @@ class CommonDatabase(BaseDatabase, metaclass=abc.ABCMeta):
         """
         return self.query(None)
 
-    def insert_hashes(self, song_id: int, hashes: List[Tuple[str, int]], batch_size: int = 1000) -> None:
+    def insert_hashes(self, audio_id: int, hashes: List[Tuple[str, int]], batch_size: int = 1000) -> None:
         """
         Insert a multitude of fingerprints.
-        :param song_id: Song identifier the fingerprints belong to
+        :param audio_id: Song identifier the fingerprints belong to
         :param hashes: A sequence of tuples in the format (hash, offset)
             - hash: Part of a sha1 hash, in hexadecimal format
             - offset: Offset this hash was created from/at.
         :param batch_size: insert batches.
         """
-        values = [(song_id, hsh, int(offset)) for hsh, offset in hashes]
+        values = [(audio_id, hsh, int(offset)) for hsh, offset in hashes]
 
         with self.cursor() as cur:
             for index in range(0, len(hashes), batch_size):
@@ -340,8 +340,8 @@ class CommonDatabase(BaseDatabase, metaclass=abc.ABCMeta):
         :param batch_size: number of query's batches.
         :return: a list of (sid, offset_difference) tuples and a
         dictionary with the amount of hashes matched (not considering
-        duplicated hashes) in each song.
-            - song id: Song identifier
+        duplicated hashes) in each audio.
+            - audio id: Song identifier
             - offset_difference: (database_offset - sampled_offset)
         """
         # Create a dictionary of hash => offset pairs for later lookups
@@ -371,20 +371,20 @@ class CommonDatabase(BaseDatabase, metaclass=abc.ABCMeta):
                     else:
                         dedup_hashes[sid] += 1
                     #  we now evaluate all offset for each  hash matched
-                    for song_sampled_offset in mapper[hsh]:
-                        results.append((sid, offset - song_sampled_offset))
+                    for audio_sampled_offset in mapper[hsh]:
+                        results.append((sid, offset - audio_sampled_offset))
 
             return results, dedup_hashes
 
-    def delete_songs_by_id(self, song_ids: List[int], batch_size: int = 1000) -> None:
+    def delete_audios_by_id(self, audio_ids: List[int], batch_size: int = 1000) -> None:
         """
-        Given a list of song ids it deletes all songs specified and their corresponding fingerprints.
-        :param song_ids: song ids to be deleted from the database.
+        Given a list of audio ids it deletes all audios specified and their corresponding fingerprints.
+        :param audio_ids: audio ids to be deleted from the database.
         :param batch_size: number of query's batches.
         """
         with self.cursor() as cur:
-            for index in range(0, len(song_ids), batch_size):
+            for index in range(0, len(audio_ids), batch_size):
                 # Create our IN part of the query
-                query = self.DELETE_SONGS % ', '.join(['%s'] * len(song_ids[index: index + batch_size]))
+                query = self.DELETE_AUDIOS % ', '.join(['%s'] * len(audio_ids[index: index + batch_size]))
 
-                cur.execute(query, song_ids[index: index + batch_size])
+                cur.execute(query, audio_ids[index: index + batch_size])

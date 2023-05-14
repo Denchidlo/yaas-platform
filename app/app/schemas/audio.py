@@ -7,7 +7,6 @@ from pydantic import BaseModel
 class AudioBase(BaseModel):
     filename: Optional[str] = None
     fingerprinted: Optional[int] = None
-    file_sha1: Optional[str] = None
     dt_created: Optional[datetime] = None
     dt_modified: Optional[datetime] = None
 
@@ -16,7 +15,6 @@ class AudioBase(BaseModel):
 class AudioCreate(AudioBase):
     fingerprinted: bool = False
     filename: str
-    file_sha1: str
     dt_created = datetime.now()
     dt_modified = datetime.now()
 
@@ -31,7 +29,6 @@ class AudioInDBBase(AudioBase):
     id: int
     filename: str
     fingerprinted: int = 0
-    file_sha1: str
     dt_created: datetime
     dt_modified: datetime
 

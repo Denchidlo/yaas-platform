@@ -13,6 +13,8 @@ async def init_db(db: AsyncSession) -> None:
     if not user_role:
         admin_role = await crud.role.create(db, obj_in={'role_name': 'User'})  # noqa: F841
 
+    print("CREATED")
+
     user = await crud.user.get_by_email(db, email=settings.FIRST_SUPERUSER)
     test_user = await crud.user.get_by_email(db, email='test@test.com')
     if not user:

@@ -9,7 +9,7 @@ from app.core.security import get_password_hash
 class UserAdmin(ModelView, model=User):
     column_list = [
         User.id,
-        User.username,
+        User.connected_account_id,
         User.email,
         User.created_at,
         User.updated_at,

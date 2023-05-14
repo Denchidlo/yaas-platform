@@ -8,7 +8,7 @@ from pyyaap.codec.decode.utils import Record
 
 class PyDubCodec(BaseCodec):
     SUPPORTED_FORMATS = [
-        "mp3", "ogg"
+        "mp3", "ogg", "m4a"
     ]
 
     @classmethod
@@ -18,7 +18,7 @@ class PyDubCodec(BaseCodec):
         if limit:
             pcm_signal = pcm_signal[:limit * 1000]
 
-        assert pcm_signal.frame_rate == 44100, "Only 44.1 kHz audio is supported"
+        # assert pcm_signal.frame_rate == 44100, "Only 44.1 kHz audio is supported"
         data = np.fromstring(pcm_signal.raw_data, np.int16)
         n_ch = pcm_signal.channels
         

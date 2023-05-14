@@ -13,7 +13,7 @@ class Event(Base):
     id = Column(Integer, primary_key=True, index=True)
     event_name = Column(String, index=True)
     
-    logs = relationship('Log', back_populates='role')
+    logs = relationship('Log', back_populates='event')
     
     def __str__(self) -> str:
-        return self.role_name
+        return self.event_name

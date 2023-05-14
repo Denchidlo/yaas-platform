@@ -7,7 +7,7 @@ from fastapi.encoders import jsonable_encoder
 
 from app.crud.base import CRUDBase
 from app.models import Audio
-from app.schemas.Audio import AudioCreate, AudioUpdate
+from app.schemas.audio import AudioCreate, AudioUpdate
 
 
 class CRUDAudio(CRUDBase[Audio, AudioCreate, AudioUpdate]):
