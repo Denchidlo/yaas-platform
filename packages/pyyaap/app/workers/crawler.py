@@ -12,7 +12,7 @@ from pyyaap.matching.signal.fingerprint import fingerprint
 
 from pyyaap.app.core.db import BaseDatabase
 from pyyaap.config.app import (
-    FIELD_FILE_SHA1, SONG_NAME, TOPN
+    FIELD_FILE_SHA1, AUDIO_NAME, TOPN
 )
 
 
@@ -28,30 +28,18 @@ class FingerpintCrawler:
             self.limit = None
 
     def __load_fingerprinted_audio_hashes(self) -> None:
-        """
-        Keeps a dictionary with the hashes of the fingerprinted songs, in that way is possible to check
-        whether or not an audio file was already processed.
-        """
-        # get songs previously indexed
-        self.songs = self.db.get_songs()
-        self.songhashes_set = set()  # to know which ones we've computed before
-        for song in self.songs:
-            song_hash = song[FIELD_FILE_SHA1]
-            self.songhashes_set.add(song_hash)
+        # get audios previously indexed
+        self.audios = self.db.get_audios()
+        self.audiohashes_set = set()  # to know which ones we've computed before
+        for audio in self.audios:
+            audio_hash = audio[FIELD_FILE_SHA1]
+            self.audiohashes_set.add(audio_hash)
 
-    def get_fingerprinted_songs(self) -> List[Dict[str, any]]:
-        """
-        To pull all fingerprinted songs from the database.
-        :return: a list of fingerprinted audios from the database.
-        """
-        return self.db.get_songs()
+    def get_fingerprinted_audios(self) -> List[Dict[str, any]]:
+        return self.db.get_audios()
 
-    def delete_songs_by_id(self, song_ids: List[int]) -> None:
-        """
-        Deletes all audios given their ids.
-        :param song_ids: song ids to delete from the database.
-        """
-        self.db.delete_songs_by_id(song_ids)
+    def delete_audios_by_id(self, audio_ids: List[int]) -> None:
+        self.db.delete_audios_by_id(audio_ids)
 
     def fingerprint_directory(self, path: str, extensions: str, nprocesses: int = None) -> None:
         """
@@ -75,7 +63,7 @@ class FingerpintCrawler:
         filenames_to_fingerprint = []
         for filename, ext in audio_codec.find_files(path, extensions):
             # don't refingerprint already fingerprinted files
-            if audio_codec.compute_binary_hash(filename) in self.songhashes_set:
+            if audio_codec.compute_binary_hash(filename) in self.audiohashes_set:
                 logging.info(f"{filename} already fingerprinted, continuing...")
                 continue
 
@@ -90,7 +78,7 @@ class FingerpintCrawler:
         # Loop till we have all of them
         while True:
             try:
-                song_name, extension, hashes, file_hash = next(iterator)
+                audio_name, extension, hashes, file_hash = next(iterator)
             except multiprocessing.TimeoutError:
                 continue
             except StopIteration:
@@ -100,12 +88,12 @@ class FingerpintCrawler:
                 # logging.info traceback because we can't reraise it here
                 traceback.print_exc(file=sys.stdout)
             else:
-                sid = self.db.insert_song(
-                    song_name + extension, file_hash, len(hashes)
+                sid = self.db.insert_audio(
+                    audio_name + extension, file_hash, len(hashes)
                 )
 
                 self.db.insert_hashes(sid, hashes)
-                self.db.set_song_fingerprinted(sid)
+                self.db.set_audio_fingerprinted(sid)
                 self.__load_fingerprinted_audio_hashes()
 
         pool.close()
@@ -120,11 +108,11 @@ class FingerpintCrawler:
         except ValueError:
             pass
 
-        song_name, extension = os.path.splitext(os.path.basename(file_name))
+        audio_name, extension = os.path.splitext(os.path.basename(file_name))
 
         fingerprints, file_hash = FingerpintCrawler.get_file_fingerprints(file_name, limit, print_output=True)
 
-        return song_name, extension, fingerprints, file_hash
+        return audio_name, extension, fingerprints, file_hash
 
     @staticmethod
     def get_file_fingerprints(file_name: str, limit: int, print_output: bool = False):
